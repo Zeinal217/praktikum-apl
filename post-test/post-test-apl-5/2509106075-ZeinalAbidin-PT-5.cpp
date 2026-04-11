@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -86,6 +87,38 @@ void tampilkan(int *pPanjang, Transaksi *arrTransaksi)
     for (int i = 0; i < *pPanjang; i++)
     {
         Transaksi *current = (arrTransaksi + i);
+
+        cout << left << setw(5) << i + 1 << setw(20) << current->nama_pelanggan;
+        if (current->jumlah_item > 0)
+        {
+            string layanan = current->detail_transaksi[0].nama_layanan + " (" + to_string((int)current->detail_transaksi[0].quantity) + ")";
+            cout << setw(25) << layanan << "Rp" << setw(13) << current->detail_transaksi[0].sub_total << "Rp" << setw(13) << current->total_bayar << endl;
+
+            for (int j = 1; j < current->jumlah_item; j++)
+            {
+                string layanan_lanjut = current->detail_transaksi[j].nama_layanan + " (" + to_string((int)current->detail_transaksi[j].quantity) + ")";
+                cout << left << setw(5) << "" << setw(20) << "" << setw(25) << layanan_lanjut << "Rp" << setw(13) << current->detail_transaksi[j].sub_total << endl;
+            }
+        }
+        tabel(85);
+    }
+}
+
+void tampilkanPointer(int panjang, Transaksi *arr[])
+{
+    if (panjang == 0)
+    {
+        cout << "Belum ada data transaksi laundry." << endl;
+        return;
+    }
+
+    tabel(85);
+    cout << left << setw(5) << "No" << setw(20) << "Pelanggan" << setw(25) << "Layanan (Qty)" << setw(15) << "Sub-Total" << setw(15) << "Total Bayar" << endl;
+    cout << setfill('-') << setw(85) << "" << setfill(' ') << endl;
+
+    for (int i = 0; i < panjang; i++)
+    {
+        Transaksi *current = arr[i];
 
         cout << left << setw(5) << i + 1 << setw(20) << current->nama_pelanggan;
         if (current->jumlah_item > 0)
@@ -227,6 +260,122 @@ void hapus(int &pPanjang, Transaksi *arrTransaksi)
     }
 }
 
+void merge(Transaksi *arr[], int l, int m, int r)
+{
+    int ukuran = r - l + 1;
+
+    Transaksi **temp = new Transaksi *[ukuran];
+
+    int i = l;
+    int j = m + 1;
+    int k = 0;
+
+    while (i <= m && j <= r)
+    {
+        if (arr[i]->nama_pelanggan <= arr[j]->nama_pelanggan)
+        {
+            temp[k] = arr[i];
+            i++;
+        }
+        else
+        {
+            temp[k] = arr[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i <= m)
+    {
+        temp[k] = arr[i];
+        i++;
+        k++;
+    }
+
+    while (j <= r)
+    {
+        temp[k] = arr[j];
+        j++;
+        k++;
+    }
+
+    for (int x = 0; x < k; x++)
+    {
+        arr[l + x] = temp[x];
+    }
+
+    delete[] temp;
+}
+
+void mergeSort(Transaksi *arr[], int l, int r)
+{
+    if (l < r)
+    {
+        int m = l + (r - l) / 2;
+
+        mergeSort(arr, l, m);
+        mergeSort(arr, m + 1, r);
+
+        merge(arr, l, m, r);
+    }
+}
+
+void quickSort(Transaksi *arr[], int low, int high, int panjang, int &iterasi)
+{
+    if (low >= high)
+        return;
+
+    int mid = low + (high - low) / 2;
+    double pivot = arr[mid]->total_bayar;
+
+    int i = low, j = high;
+
+    while (i <= j)
+    {
+        while (arr[i]->total_bayar > pivot)
+        {
+            i++;
+        }
+        while (arr[j]->total_bayar < pivot)
+        {
+            j--;
+        }
+
+        if (i <= j)
+        {
+            swap(arr[i], arr[j]);
+            i++;
+            j--;
+        }
+    }
+
+    if (low < j)
+        quickSort(arr, low, j, panjang, iterasi);
+    if (i < high)
+        quickSort(arr, i, high, panjang, iterasi);
+}
+
+void selectionSort(Transaksi *arr[], int panjang, int &iterasi)
+{
+    for (int i = 0; i < panjang - 1; i++)
+    {
+        int max_idx = i;
+
+        for (int j = i + 1; j < panjang; j++)
+        {
+            if (arr[j]->jumlah_item > arr[max_idx]->jumlah_item)
+            {
+                max_idx = j;
+            }
+        }
+
+        if (max_idx != i)
+        {
+            swap(arr[i], arr[max_idx]);
+        }
+    }
+}
+
 int main()
 {
     Data data;
@@ -246,7 +395,10 @@ int main()
             cout << "2. Tambah Data Laundry" << endl;
             cout << "3. Ubah Data Laundry" << endl;
             cout << "4. Hapus Data Laundry" << endl;
-            cout << "5. Keluar" << endl;
+            cout << "5. Sorting Nama Pelanggan Secara Ascending Menggunakan Merge Sort" << endl;
+            cout << "6. Sorting Total Bayar Secara Descending Menggunakan Quick Sort" << endl;
+            cout << "7. Sorting Jumlah Item Secara Descending Menggunakan Selection Sort" << endl;
+            cout << "8. Keluar" << endl;
             cout << "Pilihan: ";
             cin >> pilihan;
 
@@ -265,13 +417,77 @@ int main()
                 hapus(panjang, transaksi);
                 break;
             case 5:
+                if (panjang > 0)
+                {
+                    Transaksi *ptrTransaksi[MAX_TRANSAKSI];
+                    for (int i = 0; i < panjang; i++)
+                        ptrTransaksi[i] = &transaksi[i];
+
+                    cout << "\n--- Sebelum Sorting ---" << endl;
+                    tampilkanPointer(panjang, ptrTransaksi);
+
+                    mergeSort(ptrTransaksi, 0, panjang - 1);
+
+                    cout << "\n--- Setelah Sorting ---" << endl;
+                    tampilkanPointer(panjang, ptrTransaksi);
+                }
+                else
+                {
+                    cout << "Data kosong!" << endl;
+                }
+                break;
+
+            case 6:
+                if (panjang > 0)
+                {
+                    Transaksi *ptrTransaksi[MAX_TRANSAKSI];
+                    for (int i = 0; i < panjang; i++)
+                        ptrTransaksi[i] = &transaksi[i];
+
+                    cout << "\n--- Sebelum Sorting ---" << endl;
+                    tampilkanPointer(panjang, ptrTransaksi);
+
+                    int iterasi_qs = 0;
+                    quickSort(ptrTransaksi, 0, panjang - 1, panjang, iterasi_qs);
+
+                    cout << "\n--- Setelah Sorting ---" << endl;
+                    tampilkanPointer(panjang, ptrTransaksi);
+                }
+                else
+                {
+                    cout << "Data kosong!" << endl;
+                }
+                break;
+
+            case 7:
+                if (panjang > 0)
+                {
+                    Transaksi *ptrTransaksi[MAX_TRANSAKSI];
+                    for (int i = 0; i < panjang; i++)
+                        ptrTransaksi[i] = &transaksi[i];
+
+                    cout << "\n--- Sebelum Sorting ---" << endl;
+                    tampilkanPointer(panjang, ptrTransaksi);
+
+                    int iterasi_ss = 0;
+                    selectionSort(ptrTransaksi, panjang, iterasi_ss);
+
+                    cout << "\n--- Setelah Sorting ---" << endl;
+                    tampilkanPointer(panjang, ptrTransaksi);
+                }
+                else
+                {
+                    cout << "Data kosong!" << endl;
+                }
+                break;
+            case 8:
                 cout << "Sampai jumpa!" << endl;
                 break;
             default:
                 cout << "Pilihan tidak valid!" << endl;
                 break;
             }
-        } while (pilihan != 5);
+        } while (pilihan != 8);
     }
     return 0;
 }
