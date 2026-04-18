@@ -105,38 +105,6 @@ void tampilkan(int *pPanjang, Transaksi *arrTransaksi)
     }
 }
 
-void tampilkanPointer(int panjang, Transaksi *arr[])
-{
-    if (panjang == 0)
-    {
-        cout << "Belum ada data transaksi laundry." << endl;
-        return;
-    }
-
-    tabel(85);
-    cout << left << setw(5) << "Id" << setw(20) << "Pelanggan" << setw(25) << "Layanan (Qty)" << setw(15) << "Sub-Total" << setw(15) << "Total Bayar" << endl;
-    cout << setfill('-') << setw(85) << "" << setfill(' ') << endl;
-
-    for (int i = 0; i < panjang; i++)
-    {
-        Transaksi *current = arr[i];
-
-        cout << left << setw(5) << current->id_transaksi << setw(20) << current->nama_pelanggan;
-        if (current->jumlah_item > 0)
-        {
-            string layanan = current->detail_transaksi[0].nama_layanan + " (" + to_string((int)current->detail_transaksi[0].quantity) + ")";
-            cout << setw(25) << layanan << "Rp" << setw(13) << current->detail_transaksi[0].sub_total << "Rp" << setw(13) << current->total_bayar << endl;
-
-            for (int j = 1; j < current->jumlah_item; j++)
-            {
-                string layanan_lanjut = current->detail_transaksi[j].nama_layanan + " (" + to_string((int)current->detail_transaksi[j].quantity) + ")";
-                cout << left << setw(5) << "" << setw(20) << "" << setw(25) << layanan_lanjut << "Rp" << setw(13) << current->detail_transaksi[j].sub_total << endl;
-            }
-        }
-        tabel(85);
-    }
-}
-
 void tambah(int *pPanjang, Transaksi *arrTransaksi, int tambahId)
 {
     if (*pPanjang < MAX_TRANSAKSI)
@@ -281,19 +249,16 @@ void hapus(int &pPanjang, Transaksi *arrTransaksi)
     }
 }
 
-void merge(Transaksi *arr[], int l, int m, int r)
+void merge(Transaksi arr[], int l, int m, int r)
 {
     int ukuran = r - l + 1;
-
-    Transaksi **temp = new Transaksi *[ukuran];
-
+    Transaksi *temp = new Transaksi[ukuran];
     int i = l;
     int j = m + 1;
     int k = 0;
-
     while (i <= m && j <= r)
     {
-        if (arr[i]->nama_pelanggan <= arr[j]->nama_pelanggan)
+        if (arr[i].nama_pelanggan <= arr[j].nama_pelanggan)
         {
             temp[k] = arr[i];
             i++;
@@ -328,33 +293,31 @@ void merge(Transaksi *arr[], int l, int m, int r)
     delete[] temp;
 }
 
-void mergeSort(Transaksi *arr[], int l, int r)
+void mergeSort(Transaksi arr[], int l, int r)
 {
     if (l < r)
     {
         int m = l + (r - l) / 2;
-
         mergeSort(arr, l, m);
         mergeSort(arr, m + 1, r);
-
         merge(arr, l, m, r);
     }
 }
 
-void quickSort(Transaksi *arr[], int low, int high)
+void quickSort(Transaksi arr[], int low, int high)
 {
     if (low >= high)
         return;
     int mid = low + (high - low) / 2;
-    double pivot = arr[mid]->id_transaksi;
+    double pivot = arr[mid].id_transaksi;
     int i = low, j = high;
     while (i <= j)
     {
-        while (arr[i]->id_transaksi > pivot)
+        while (arr[i].id_transaksi > pivot)
         {
             i++;
         }
-        while (arr[j]->id_transaksi < pivot)
+        while (arr[j].id_transaksi < pivot)
         {
             j--;
         }
@@ -372,20 +335,18 @@ void quickSort(Transaksi *arr[], int low, int high)
         quickSort(arr, i, high);
 }
 
-void selectionSort(Transaksi *arr[], int panjang)
+void selectionSort(Transaksi arr[], int panjang)
 {
     for (int i = 0; i < panjang - 1; i++)
     {
         int max_idx = i;
-
         for (int j = i + 1; j < panjang; j++)
         {
-            if (arr[j]->jumlah_item > arr[max_idx]->jumlah_item)
+            if (arr[j].jumlah_item > arr[max_idx].jumlah_item)
             {
                 max_idx = j;
             }
         }
-
         if (max_idx != i)
         {
             swap(arr[i], arr[max_idx]);
@@ -393,11 +354,35 @@ void selectionSort(Transaksi *arr[], int panjang)
     }
 }
 
-int linearSearch(int panjang, Transaksi *arrTransaksi, string targetNama)
+int binarySearch(int panjang, Transaksi *arrTransaksi, int targetId)
+{
+    int low = 0;
+    int high = panjang - 1;
+    while (low <= high)
+    {
+        int mid = low + (high - low) / 2;
+        if ((arrTransaksi + mid)->id_transaksi == targetId)
+        {
+            return mid;
+        }
+
+        if ((arrTransaksi + mid)->id_transaksi > targetId)
+        {
+            low = mid + 1;
+        }
+        else
+        {
+            high = mid - 1;
+        }
+    }
+    return -1;
+}
+
+int linearSearch(int panjang, Transaksi *arrTransaksi, string target)
 {
     for (int i = 0; i < panjang; i++)
     {
-        if ((arrTransaksi + i)->nama_pelanggan == targetNama)
+        if ((arrTransaksi + i)->nama_pelanggan == target)
         {
             return i;
         }
@@ -405,30 +390,24 @@ int linearSearch(int panjang, Transaksi *arrTransaksi, string targetNama)
     return -1;
 }
 
-int binarySearch(int panjang, Transaksi *arrTransaksi, int targetID)
+void cetakDetail(Transaksi *current)
 {
-    int low = 0;
-    int high = panjang - 1;
+    tabel(85);
+    cout << "NOTA TRANSAKSI - ID: " << current->id_transaksi << endl;
+    cout << "Nama Pelanggan: " << current->nama_pelanggan << endl;
+    cout << setfill('-') << setw(85) << "" << setfill(' ') << endl;
+    cout << left << setw(30) << "Layanan" << setw(15) << "Harga" << setw(15) << "Qty" << setw(15) << "Sub-Total" << endl;
 
-    while (low <= high)
+    for (int j = 0; j < current->jumlah_item; j++)
     {
-        int mid = low + (high - low) / 2;
-
-        if ((arrTransaksi + mid)->id_transaksi == targetID)
-        {
-            return mid;
-        }
-
-        if ((arrTransaksi + mid)->id_transaksi < targetID)
-        {
-            high = mid - 1;
-        }
-        else
-        {
-            low = mid + 1;
-        }
+        cout << left << setw(30) << current->detail_transaksi[j].nama_layanan
+             << "Rp" << setw(13) << current->detail_transaksi[j].harga
+             << setw(15) << (int)current->detail_transaksi[j].quantity
+             << "Rp" << setw(13) << current->detail_transaksi[j].sub_total << endl;
     }
-    return -1;
+    cout << setfill('-') << setw(85) << "" << setfill(' ') << endl;
+    cout << "TOTAL BAYAR: Rp" << current->total_bayar << endl;
+    tabel(85);
 }
 
 int main()
@@ -454,7 +433,9 @@ int main()
             cout << "5. Sorting Nama Pelanggan Secara Ascending" << endl;
             cout << "6. Sorting Id Transaksi Secara Descending" << endl;
             cout << "7. Sorting Jumlah Item Secara Descending" << endl;
-            cout << "8. Keluar" << endl;
+            cout << "8. Cari Id" << endl;
+            cout << "9. Cari Nama" << endl;
+            cout << "10. Keluar" << endl;
             cout << "Pilihan: ";
             cin >> pilihan;
 
@@ -475,14 +456,11 @@ int main()
             case 5:
                 if (panjang > 0)
                 {
-                    Transaksi *ptrTransaksi[MAX_TRANSAKSI];
-                    for (int i = 0; i < panjang; i++)
-                        ptrTransaksi[i] = &transaksi[i];
                     cout << "\n--- Sebelum Sorting ---" << endl;
-                    tampilkanPointer(panjang, ptrTransaksi);
-                    mergeSort(ptrTransaksi, 0, panjang - 1);
+                    tampilkan(&panjang, transaksi);
+                    mergeSort(transaksi, 0, panjang - 1);
                     cout << "\n--- Setelah Sorting ---" << endl;
-                    tampilkanPointer(panjang, ptrTransaksi);
+                    tampilkan(&panjang, transaksi);
                 }
                 else
                 {
@@ -492,14 +470,11 @@ int main()
             case 6:
                 if (panjang > 0)
                 {
-                    Transaksi *ptrTransaksi[MAX_TRANSAKSI];
-                    for (int i = 0; i < panjang; i++)
-                        ptrTransaksi[i] = &transaksi[i];
                     cout << "\n--- Sebelum Sorting ---" << endl;
-                    tampilkanPointer(panjang, ptrTransaksi);
-                    quickSort(ptrTransaksi, 0, panjang - 1);
+                    tampilkan(&panjang, transaksi);
+                    quickSort(transaksi, 0, panjang - 1);
                     cout << "\n--- Setelah Sorting ---" << endl;
-                    tampilkanPointer(panjang, ptrTransaksi);
+                    tampilkan(&panjang, transaksi);
                 }
                 else
                 {
@@ -509,14 +484,11 @@ int main()
             case 7:
                 if (panjang > 0)
                 {
-                    Transaksi *ptrTransaksi[MAX_TRANSAKSI];
-                    for (int i = 0; i < panjang; i++)
-                        ptrTransaksi[i] = &transaksi[i];
                     cout << "\n--- Sebelum Sorting ---" << endl;
-                    tampilkanPointer(panjang, ptrTransaksi);
-                    selectionSort(ptrTransaksi, panjang);
+                    tampilkan(&panjang, transaksi);
+                    selectionSort(transaksi, panjang);
                     cout << "\n--- Setelah Sorting ---" << endl;
-                    tampilkanPointer(panjang, ptrTransaksi);
+                    tampilkan(&panjang, transaksi);
                 }
                 else
                 {
@@ -524,13 +496,50 @@ int main()
                 }
                 break;
             case 8:
+            {
+                int target;
+                cout << "Masukkan ID: ";
+                cin >> target;
+                if (panjang > 0)
+                {
+                    quickSort(transaksi, 0, panjang - 1);
+                    int idx = binarySearch(panjang, transaksi, target);
+                    if (idx != -1)
+                    {
+                        cetakDetail(&transaksi[idx]);
+                    }
+                    else
+                    {
+                        cout << "ID tidak ditemukan di dalam sistem.\n";
+                    }
+                }
+                else
+                {
+                    cout << "Data kosong. Tidak ada yang bisa dicari.\n";
+                }
+                break;
+            }
+            case 9:
+            {
+                string targetNama;
+                cout << "Masukkan Nama: ";
+                cin.ignore();
+                getline(cin, targetNama);
+                int idx = linearSearch(panjang, transaksi, targetNama);
+                if (idx != -1)
+                    cetakDetail(&transaksi[idx]);
+                else
+                    cout << "Nama pelanggan tidak ditemukan.\n";
+                break;
+            }
+            case 10:
                 cout << "Sampai jumpa!" << endl;
                 break;
             default:
                 cout << "Pilihan tidak valid!" << endl;
                 break;
             }
-        } while (pilihan != 8);
+        } while (pilihan != 10);
     }
     return 0;
 }
