@@ -393,7 +393,7 @@ int linearSearch(int panjang, Transaksi *arrTransaksi, string target)
 void cetakDetail(Transaksi *current)
 {
     tabel(85);
-    cout << "NOTA TRANSAKSI - ID: " << current->id_transaksi << endl;
+    cout << "NOTA TRANSAKSI - Id: " << current->id_transaksi << endl;
     cout << "Nama Pelanggan: " << current->nama_pelanggan << endl;
     cout << setfill('-') << setw(85) << "" << setfill(' ') << endl;
     cout << left << setw(30) << "Layanan" << setw(15) << "Harga" << setw(15) << "Qty" << setw(15) << "Sub-Total" << endl;
@@ -498,7 +498,7 @@ int main()
             case 8:
             {
                 int target;
-                cout << "Masukkan ID: ";
+                cout << "Masukkan Id: ";
                 cin >> target;
                 if (panjang > 0)
                 {
@@ -510,7 +510,7 @@ int main()
                     }
                     else
                     {
-                        cout << "ID tidak ditemukan di dalam sistem.\n";
+                        cout << "Id tidak ditemukan di dalam sistem.\n";
                     }
                 }
                 else
